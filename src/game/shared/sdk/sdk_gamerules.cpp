@@ -1061,6 +1061,11 @@ bool CSDKGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return false;
 	}
 
+	if ( collisionGroup0 == COLLISION_GROUP_PLAYER && collisionGroup1 == COLLISION_GROUP_BLOCKBASE )
+	{
+		return true;
+	}
+
 	if ( collisionGroup0 == COLLISION_GROUP_BLOCKBASE && collisionGroup1 == COLLISION_GROUP_BLOCKBASE )
 	{
 		return true;

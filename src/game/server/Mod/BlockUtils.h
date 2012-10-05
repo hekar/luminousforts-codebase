@@ -29,13 +29,24 @@ the terms of any one of the MPL, the GPL or the LGPL.
 class CBlockBase;
 
 CBlockBase *FindBlock( CBasePlayer *player, int distance );
-void GetPlayerTraceLine( trace_t& tr, CBasePlayer *player, int distance );
+void GetPlayerTraceLine( trace_t& tr, CBasePlayer *player, int distance, int collisionGroup = COLLISION_GROUP_NONE );
 Vector GetPlayerTraceLineEnd( CBasePlayer *player, int distance );
 CBaseEntity *SpawnBlock( int blockType, int team, 
 	const Vector& origin, const QAngle& angles, 
-	CBaseEntity *parent, bool freeze = false );
+	CBaseEntity *parent );
 bool DisposeBlock( CBaseEntity *ent );
 void SnapVector( Vector& vector );
-void SnapAngle( QAngle& angle );
+
+enum SnapAngleStyle
+{
+	// Straight like a wall
+	SNAP_ANGLE_WALL = 0,
+	// Flat on the ground
+	SNAP_ANGLE_FLAT,
+	// Diagonal like a ramp
+	SNAP_ANGLE_RAMP
+};
+
+void SnapAngle( QAngle& angle, int style = SNAP_ANGLE_WALL );
 
 #endif // BLOCK_UTILS_H

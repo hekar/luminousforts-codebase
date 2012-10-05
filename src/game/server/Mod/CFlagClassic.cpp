@@ -223,6 +223,10 @@ bool CFlagClassic::CreateDropPhysics ()
 		pPhysFlag->SetPosition( dropPos, GetAbsAngles(), true);
 	}
 
+	pPhysFlag->EnableMotion( true );
+	pPhysFlag->EnableCollisions( true );
+	pPhysFlag->EnableGravity( true );
+
 	SetMoveType( MOVETYPE_VPHYSICS );
 	AddSolidFlags( FSOLID_TRIGGER );
 
@@ -257,8 +261,10 @@ bool CFlagClassic::CreateDropPhysics ()
 // Do not call directly, use player GiveFlag(CBaseEntity *pFlag) instead
 void CFlagClassic::Pickup( CModPlayer *pPlayer )
 {
-	CreateNoPhysics();
-	SetMoveType( MOVETYPE_NOCLIP );
+	FollowEntity( pPlayer );
+	SetLocalOrigin( Vector( 0, 0, 100 ) );
+	//CreateNoPhysics();
+	//SetMoveType( MOVETYPE_NOCLIP );
 
 	BaseClass::Pickup( pPlayer );
 	m_bFirstTake = true;
@@ -279,6 +285,7 @@ void CFlagClassic::Pickup( CModPlayer *pPlayer )
 
 void CFlagClassic::Drop()
 {
+	FollowEntity( NULL );
 	// Use some trig to drop flag
 	CreateDropPhysics();
 	

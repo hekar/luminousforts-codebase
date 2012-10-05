@@ -26,11 +26,12 @@ the terms of any one of the MPL, the GPL or the LGPL.
 #include "cbase.h"
 #include "sdk_team.h"
 #include "CBlockBase.h"
+#include "BlockUtils.h"
 
 ConVar lf_block_dissolve( "lf_block_dissolve", "0" );
 ConVar lf_block_grid_x( "lf_block_grid_x", "64" );
 ConVar lf_block_grid_y( "lf_block_grid_y", "64" );
-ConVar lf_block_grid_z( "lf_block_grid_z", "64" );
+ConVar lf_block_grid_z( "lf_block_grid_z", "32" );
 
 CBlockBase *FindBlock( CBasePlayer *player, int distance )
 {
@@ -57,7 +58,7 @@ CBlockBase *FindBlock( CBasePlayer *player, int distance )
 	return pBlock;
 }
 
-void GetPlayerTraceLine( trace_t& tr, CBasePlayer *player, int distance )
+void GetPlayerTraceLine( trace_t& tr, CBasePlayer *player, int distance, int collisionGroup )
 {
 	Vector vecSrc, vecDir, vecEnd;
 
@@ -67,7 +68,7 @@ void GetPlayerTraceLine( trace_t& tr, CBasePlayer *player, int distance )
 	vecEnd = vecSrc + vecDir * distance;
 	
 	// Create the traceline
-	UTIL_TraceLine( vecSrc, vecEnd, MASK_ALL, player, COLLISION_GROUP_NONE, &tr );
+	UTIL_TraceLine( vecSrc, vecEnd, MASK_ALL, player, collisionGroup, &tr );
 }
 
 Vector GetPlayerTraceLineEnd( CBasePlayer *player, int distance )
@@ -78,7 +79,7 @@ Vector GetPlayerTraceLineEnd( CBasePlayer *player, int distance )
 }
 
 CBaseEntity *SpawnBlock( int blockType, int team, const Vector& origin, 
-	const QAngle& angles, CBaseEntity *parent, bool freeze )
+	const QAngle& angles, CBaseEntity *parent )
 {
 	if ( blockType >= BLOCK_1x2 && blockType < BLOCK_LAST )
 	{
@@ -96,12 +97,6 @@ CBaseEntity *SpawnBlock( int blockType, int team, const Vector& origin,
 			CSDKTeam *pTeam = static_cast< CSDKTeam *> ( pBlock->GetTeam() );
 			pTeam->AddBlockCount( pBlock->GetBlockWorth() );
 			pBlock->Spawn();
-
-			if ( freeze && parent->IsPlayer() )
-			{
-				CBasePlayer *player = (CBasePlayer *)parent;
-				pBlock->Freeze( player, FROZEN_BY_PLAYER );
-			}
 		}
 		else
 		{
@@ -151,10 +146,20 @@ void SnapVector( Vector& vector )
 	vector.z = floor(vector.z / lf_block_grid_z.GetFloat()) * lf_block_grid_z.GetFloat();
 }
 
-void SnapAngle( QAngle& angles )
+void SnapAngle( QAngle& angles, int style )
 {
 	float snap = 90.0f;
-	angles.x = floor(angles.x / snap) * snap;
-	angles.y = floor(angles.y / snap) * snap;
+	if ( style == SNAP_ANGLE_WALL )
+	{
+		angles.x = 90.0f;
+		// TODO: Take player viewing angle into consideration
+		angles.y = 90.0f;
+	}
+	else
+	{
+		angles.x = floor(angles.x / snap) * snap;
+		angles.y = floor(angles.y / snap) * snap;
+	}
+
 	angles.z = floor(angles.z / snap) * snap;
 }

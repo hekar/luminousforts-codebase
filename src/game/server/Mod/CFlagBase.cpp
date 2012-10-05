@@ -196,10 +196,6 @@ void CFlagBase::Pickup( CModPlayer *pPlayer )
 	m_pPlayerWithFlag = pPlayer;
 	m_pPlayerDroppedFlag = NULL;
 
-	FollowEntity( pPlayer );
-	const Vector& local = GetLocalOrigin();
-	SetLocalOrigin( Vector( local.x, local.y, local.z + 100.0f ) );
-
 	OnPickup();
 	OnPickupEvent();
 	OnPickupOutput();
@@ -244,6 +240,7 @@ void CFlagBase::ReturnToSpawn( bool scored )
 	OnReturnEvent();
 	OnReturnOutput();
 
+	FollowEntity( NULL );
 	SetAbsOrigin( m_vecSpawnOrigin );
 
 	// The player no longer has the flag

@@ -109,6 +109,8 @@ public:
 	void SetBlockWorthFromConfig( const char *blockworthkey );
 	void SetBlockHealthFromConfig( const char *healthKey );
 
+	void SetSpawnFrozen( bool val ) { m_bSpawnFrozen = val; }
+
 private:
 	PrivateMethod void SetLastFrozenUserID( int UserID );
 	PrivateMethod void SetLastUnFrozenUserID( int UserID );

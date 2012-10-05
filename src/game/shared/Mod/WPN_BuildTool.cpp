@@ -65,7 +65,7 @@ public:
 	// Overridden for a quicker firerate
 	virtual float GetFireRate( void ) { return BALANCE_VALUE( Float, lfm_build_tool_firerate ); }
 
-
+	virtual void ItemPostFrame();
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
 
@@ -98,6 +98,12 @@ acttable_t CWeaponBuildTool::m_acttable[] =
 
 IMPLEMENT_ACTTABLE( CWeaponBuildTool );
 
+void CWeaponBuildTool::ItemPostFrame()
+{
+	BaseClass::ItemPostFrame();
+
+	// Draw the debug layout of the block
+}
 
 void CWeaponBuildTool::PrimaryAttack()
 {
@@ -120,7 +126,13 @@ void CWeaponBuildTool::PrimaryAttack()
 		//VectorAngles( tr.plane.normal, angles );
 		SnapAngle( angles );
 
-		SpawnBlock( 1, player->GetTeamNumber(), pos, angles, player, true );
+		CBaseEntity *ent = SpawnBlock( 0, player->GetTeamNumber(), pos, angles, player );
+		if ( ent->IsBlock() )
+		{
+			CBlockBase *block = dynamic_cast< CBlockBase * > ( ent );
+			block->Freeze( player, FROZEN_BY_PLAYER );
+		}
+
 		lastTime = gpGlobals->curtime;
 	}
 
@@ -137,7 +149,7 @@ void CWeaponBuildTool::SecondaryAttack()
 		CBasePlayer *player = (CBasePlayer *) GetOwner();
 
 		trace_t tr;
-		GetPlayerTraceLine( tr, player, lfm_build_tool_distance.GetInt() );
+		GetPlayerTraceLine( tr, player, lfm_build_tool_distance.GetInt(), COLLISION_GROUP_BLOCKBASE );
 
 		CBaseEntity *ent = tr.m_pEnt;
 
