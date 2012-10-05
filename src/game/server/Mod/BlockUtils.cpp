@@ -28,6 +28,9 @@ the terms of any one of the MPL, the GPL or the LGPL.
 #include "CBlockBase.h"
 
 ConVar lf_block_dissolve( "lf_block_dissolve", "0" );
+ConVar lf_block_grid_x( "lf_block_grid_x", "64" );
+ConVar lf_block_grid_y( "lf_block_grid_y", "64" );
+ConVar lf_block_grid_z( "lf_block_grid_z", "64" );
 
 CBlockBase *FindBlock( CBasePlayer *player, int distance )
 {
@@ -54,7 +57,7 @@ CBlockBase *FindBlock( CBasePlayer *player, int distance )
 	return pBlock;
 }
 
-trace_t& GetPlayerTraceLine( CBasePlayer *player, int distance )
+void GetPlayerTraceLine( trace_t& tr, CBasePlayer *player, int distance )
 {
 	Vector vecSrc, vecDir, vecEnd;
 
@@ -64,29 +67,18 @@ trace_t& GetPlayerTraceLine( CBasePlayer *player, int distance )
 	vecEnd = vecSrc + vecDir * distance;
 	
 	// Create the traceline
-	trace_t tr;
-	UTIL_TraceLine( vecSrc, vecEnd, MASK_SHOT, player, COLLISION_GROUP_NONE, &tr );
-	
-	return tr;
+	UTIL_TraceLine( vecSrc, vecEnd, MASK_ALL, player, COLLISION_GROUP_NONE, &tr );
 }
 
 Vector GetPlayerTraceLineEnd( CBasePlayer *player, int distance )
 {
-	Vector vecSrc, vecDir, vecEnd;
-
-	vecSrc = player->Weapon_ShootPosition();
-	player->EyeVectors( &vecDir );
-
-	vecEnd = vecSrc + vecDir * distance;
-	
-	// Create the traceline
 	trace_t tr;
-	UTIL_TraceLine( vecSrc, vecEnd, MASK_SHOT, player, COLLISION_GROUP_NONE, &tr );
-	
-	return vecEnd;
+	GetPlayerTraceLine( tr, player, distance );
+	return tr.endpos;
 }
 
-CBaseEntity *SpawnBlock( int blockType, int team, const Vector& origin, const QAngle& angles, CBaseEntity *parent )
+CBaseEntity *SpawnBlock( int blockType, int team, const Vector& origin, 
+	const QAngle& angles, CBaseEntity *parent, bool freeze )
 {
 	if ( blockType >= BLOCK_1x2 && blockType < BLOCK_LAST )
 	{
@@ -104,6 +96,12 @@ CBaseEntity *SpawnBlock( int blockType, int team, const Vector& origin, const QA
 			CSDKTeam *pTeam = static_cast< CSDKTeam *> ( pBlock->GetTeam() );
 			pTeam->AddBlockCount( pBlock->GetBlockWorth() );
 			pBlock->Spawn();
+
+			if ( freeze && parent->IsPlayer() )
+			{
+				CBasePlayer *player = (CBasePlayer *)parent;
+				pBlock->Freeze( player, FROZEN_BY_PLAYER );
+			}
 		}
 		else
 		{
@@ -121,7 +119,7 @@ CBaseEntity *SpawnBlock( int blockType, int team, const Vector& origin, const QA
 
 bool DisposeBlock( CBaseEntity *ent )
 {
-	if ( ent->IsBlock() ) // If the entity is a block
+	if ( ent->IsBlock() )
 	{
 		CBlockBase *pBlock = dynamic_cast< CBlockBase * > ( ent );
 
@@ -144,4 +142,19 @@ bool DisposeBlock( CBaseEntity *ent )
 	{
 		return false;
 	}
+}
+
+void SnapVector( Vector& vector )
+{
+	vector.x = floor(vector.x / lf_block_grid_x.GetFloat()) * lf_block_grid_x.GetFloat();
+	vector.y = floor(vector.y / lf_block_grid_y.GetFloat()) * lf_block_grid_y.GetFloat();
+	vector.z = floor(vector.z / lf_block_grid_z.GetFloat()) * lf_block_grid_z.GetFloat();
+}
+
+void SnapAngle( QAngle& angles )
+{
+	float snap = 90.0f;
+	angles.x = floor(angles.x / snap) * snap;
+	angles.y = floor(angles.y / snap) * snap;
+	angles.z = floor(angles.z / snap) * snap;
 }

@@ -46,6 +46,7 @@ the terms of any one of the MPL, the GPL or the LGPL.
 BALANCE_DEFINE( lfm_build_tool_snap_x, 1.0f );
 BALANCE_DEFINE( lfm_build_tool_snap_y, 1.0f );
 BALANCE_DEFINE( lfm_build_tool_firerate, 0.70f );
+BALANCE_DEFINE( lfm_build_tool_distance, 5000.0f );
 
 class CWeaponBuildTool : public CWeaponSDKBase
 {
@@ -55,6 +56,7 @@ public:
 
 	CWeaponBuildTool()
 	{
+		lastTime = gpGlobals->curtime;
 	}
 	
 	virtual SDKWeaponID GetWeaponID( void ) const { return LF_WEAPON_BUILDTOOL; }
@@ -69,6 +71,8 @@ public:
 
 private:
 	CWeaponBuildTool( const CWeaponBuildTool & );
+
+	float lastTime;
 };
 
 LINK_ENTITY_TO_CLASS( weapon_lf_build_tool, CWeaponBuildTool );
@@ -100,14 +104,25 @@ void CWeaponBuildTool::PrimaryAttack()
 	// Place a block
 #ifndef CLIENT_DLL
 
-	CBasePlayer *player = (CBasePlayer *) GetOwner();
+	if ( ( gpGlobals->curtime - lastTime ) > 1.0f )
+	{
+		CBasePlayer *player = (CBasePlayer *) GetOwner();
 
-	const Vector& end = GetPlayerTraceLineEnd( player, 50 );
+		trace_t tr;
+		GetPlayerTraceLine( tr, player, lfm_build_tool_distance.GetInt() );
 
-	end 
+		const Vector& end = tr.endpos;
+		Vector pos = Vector( end );
+		SnapVector( pos );
 
-	SpawnBlock( 1, SDK_TEAM_RED, end, player->EyeAngles(), player );
+		QAngle angles = player->EyeAngles();
+		//QAngle angles;
+		//VectorAngles( tr.plane.normal, angles );
+		SnapAngle( angles );
 
+		SpawnBlock( 1, player->GetTeamNumber(), pos, angles, player, true );
+		lastTime = gpGlobals->curtime;
+	}
 
 #endif // SERVER
 }
@@ -117,15 +132,20 @@ void CWeaponBuildTool::SecondaryAttack()
 	// Delete a block
 #ifndef CLIENT_DLL
 
-	CBasePlayer *player = (CBasePlayer *) GetOwner();
-
-	trace_t& tr = GetPlayerTraceLine( player, 50 );
-
-	CBaseEntity *ent = tr.m_pEnt;
-
-	if ( ent != NULL && ent->IsBlock() )
+	if ( ( gpGlobals->curtime - lastTime ) > 1.0f )
 	{
-		DisposeBlock( ent );
+		CBasePlayer *player = (CBasePlayer *) GetOwner();
+
+		trace_t tr;
+		GetPlayerTraceLine( tr, player, lfm_build_tool_distance.GetInt() );
+
+		CBaseEntity *ent = tr.m_pEnt;
+
+		if ( ent != NULL && ent->IsBlock() )
+		{
+			DisposeBlock( ent );
+			lastTime = gpGlobals->curtime;
+		}
 	}
 
 #endif // SERVER
