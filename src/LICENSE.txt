@@ -1,0 +1,8 @@
+License:
+	For files created by and for Luminous Forts, they are under the MPL license or under an otherwise specified license in the file.
+	Check MPL-1.1.txt for more details.
+	
+	All other files from Valve (All rights reserved). They are under Valve's own proprietary license.
+
+	
+Copyright Hekar Khani 2010. I retain no rights over the code and/or content created by Valve.
