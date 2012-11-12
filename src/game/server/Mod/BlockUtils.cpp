@@ -83,7 +83,13 @@ CBaseEntity *SpawnBlock( int blockType, int team, const Vector& origin,
 {
 	if ( blockType >= BLOCK_1x2 && blockType < BLOCK_LAST )
 	{
-		CBaseEntity *pEntity = CBaseEntity::CreateNoSpawn ( g_szBlocks[ blockType ], origin, angles, parent );
+		CBaseEntity *pEntity = CBaseEntity::CreateNoSpawn ( 
+			g_szBlocks[ blockType ], origin, angles, parent );
+		if ( !pEntity )
+		{
+			return NULL;
+		}
+
 		CBlockBase *pBlock = dynamic_cast< CBlockBase * > ( pEntity );
 		if ( !pBlock )
 		{
@@ -141,14 +147,15 @@ bool DisposeBlock( CBaseEntity *ent )
 
 void SnapVector( Vector& vector )
 {
-	vector.x = floor(vector.x / lf_block_grid_x.GetFloat()) * lf_block_grid_x.GetFloat();
-	vector.y = floor(vector.y / lf_block_grid_y.GetFloat()) * lf_block_grid_y.GetFloat();
-	vector.z = floor(vector.z / lf_block_grid_z.GetFloat()) * lf_block_grid_z.GetFloat();
+	
+	vector.x = RoundFloatToInt(vector.x / lf_block_grid_x.GetFloat()) * lf_block_grid_x.GetFloat();
+	vector.y = RoundFloatToInt(vector.y / lf_block_grid_y.GetFloat()) * lf_block_grid_y.GetFloat();
+	vector.z = RoundFloatToInt(vector.z / lf_block_grid_z.GetFloat()) * lf_block_grid_z.GetFloat();
 }
 
 void SnapAngle( QAngle& angles, int style )
 {
-	float snap = 90.0f;
+	float snap = 45.0f;
 	if ( style == SNAP_ANGLE_WALL )
 	{
 		angles.x = 90.0f;
@@ -161,5 +168,5 @@ void SnapAngle( QAngle& angles, int style )
 		angles.y = floor(angles.y / snap) * snap;
 	}
 
-	angles.z = floor(angles.z / snap) * snap;
+	angles.z = RoundFloatToInt(angles.z / snap) * snap;
 }

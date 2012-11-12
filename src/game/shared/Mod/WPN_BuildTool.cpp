@@ -61,6 +61,26 @@ public:
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
 
+	virtual bool UsesClipsForAmmo1()
+	{
+		return false;
+	}
+
+	virtual bool UsesClipsForAmmo2()
+	{
+		return false;
+	}
+
+	virtual bool UsesPrimaryAmmo()
+	{
+		return false;
+	}
+
+	virtual bool UsesSecondaryAmmo()
+	{
+		return false;
+	}
+
 private:
 	CWeaponBuildTool( const CWeaponBuildTool & );
 
@@ -113,12 +133,12 @@ void CWeaponBuildTool::PrimaryAttack()
 		Vector pos = Vector( end );
 		SnapVector( pos );
 
-		QAngle angles = player->EyeAngles();
-		//QAngle angles;
-		//VectorAngles( tr.plane.normal, angles );
-		SnapAngle( angles );
+		//QAngle angles = player->EyeAngles();
+		QAngle angles;
+		VectorAngles( tr.plane.normal, angles );
+		SnapAngle( angles, SNAP_ANGLE_NONE );
 
-		CBaseEntity *ent = SpawnBlock( 0, player->GetTeamNumber(), pos, angles, player );
+		CBaseEntity *ent = SpawnBlock( 0, player->GetTeamNumber(), pos, angles, this );
 		if ( ent->IsBlock() )
 		{
 			CBlockBase *block = dynamic_cast< CBlockBase * > ( ent );
@@ -136,21 +156,20 @@ void CWeaponBuildTool::SecondaryAttack()
 	// Delete a block
 #ifndef CLIENT_DLL
 
-	if ( ( gpGlobals->curtime - lastTime ) > 1.0f )
+	CBasePlayer *player = (CBasePlayer *) GetOwner();
+
+	trace_t tr;
+	GetPlayerTraceLine( tr, player, lfm_build_tool_distance.GetInt(),
+		COLLISION_GROUP_NONE );
+
+	CBaseEntity *ent = tr.m_pEnt;
+
+	if ( ent != NULL && ent->IsBlock() )
 	{
-		CBasePlayer *player = (CBasePlayer *) GetOwner();
-
-		trace_t tr;
-		GetPlayerTraceLine( tr, player, lfm_build_tool_distance.GetInt(), COLLISION_GROUP_BLOCKBASE );
-
-		CBaseEntity *ent = tr.m_pEnt;
-
-		if ( ent != NULL && ent->IsBlock() )
-		{
-			DisposeBlock( ent );
-			lastTime = gpGlobals->curtime;
-		}
+		DisposeBlock( ent );
 	}
+
+	m_flNextSecondaryAttack = gpGlobals->curtime + 1.0f;
 
 #endif // SERVER
 }

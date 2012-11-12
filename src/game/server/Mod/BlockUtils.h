@@ -44,7 +44,9 @@ enum SnapAngleStyle
 	// Flat on the ground
 	SNAP_ANGLE_FLAT,
 	// Diagonal like a ramp
-	SNAP_ANGLE_RAMP
+	SNAP_ANGLE_RAMP,
+	// Do not snap on anything
+	SNAP_ANGLE_NONE
 };
 
 void SnapAngle( QAngle& angle, int style = SNAP_ANGLE_WALL );
